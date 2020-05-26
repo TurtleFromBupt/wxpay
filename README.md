@@ -29,14 +29,14 @@ wxpay 提供了以下的方法：
 ## 安装
 
 ```bash
-$ go get github.com/objcoding/wxpay
+$ go get github.com/TurtleFromBupt/wxpay
 
 ```
 
 ## go modules
 ```cgo
 // go.mod
-require github.com/objcoding/wxpay v1.0.5
+require github.com/TurtleFromBupt/wxpay v1.0.5
 
 ```
 
@@ -75,7 +75,7 @@ params.SetString("body", "test").
 		SetString("out_trade_no", "436577857").
 		SetInt64("total_fee", 1).
 		SetString("spbill_create_ip", "127.0.0.1").
-		SetString("notify_url", "http://notify.objcoding.com/notify").
+		SetString("notify_url", "http://notify.TurtleFromBupt.com/notify").
 		SetString("trade_type", "APP")
 p, _ := client.UnifiedOrder(params)
 
