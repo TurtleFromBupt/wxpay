@@ -50,9 +50,15 @@ func (c *Client) SetAccount(account *Account) {
 }
 
 // 向 params 中添加 appid、mch_id、nonce_str、sign_type、sign
-func (c *Client) fillRequestData(params Params) Params {
-	params["appid"] = c.account.appID
-	params["mch_id"] = c.account.mchID
+// 企业付款给零钱，appid->mch_appid,mch_id->mchid
+func (c *Client) fillRequestData(params Params, payTp ...string) Params {
+	if len(payTp) == 1 && payTp[0] == MchToCashTp {
+		params["mch_appid"] = c.account.appID
+		params["mchid"] = c.account.mchID
+	} else {
+		params["appid"] = c.account.appID
+		params["mch_id"] = c.account.mchID
+	}
 	params["nonce_str"] = nonceStr()
 	params["sign_type"] = c.signType
 	params["sign"] = c.Sign(params)
@@ -76,7 +82,7 @@ func (c *Client) postWithoutCert(url string, params Params) (string, error) {
 }
 
 // https need cert post
-func (c *Client) postWithCert(url string, params Params) (string, error) {
+func (c *Client) postWithCert(url string, params Params, payTp ...string) (string, error) {
 	if c.account.certData == nil {
 		return "", errors.New("证书数据为空")
 	}
@@ -92,7 +98,7 @@ func (c *Client) postWithCert(url string, params Params) (string, error) {
 		DisableCompression: true,
 	}
 	h := &http.Client{Transport: transport}
-	p := c.fillRequestData(params)
+	p := c.fillRequestData(params, payTp...)
 	response, err := h.Post(url, bodyType, strings.NewReader(MapToXml(p)))
 	if err != nil {
 		return "", err
@@ -381,6 +387,17 @@ func (c *Client) AuthCodeToOpenid(params Params) (Params, error) {
 		url = AuthCodeToOpenidUrl
 	}
 	xmlStr, err := c.postWithoutCert(url, params)
+	if err != nil {
+		return nil, err
+	}
+	return c.processResponseXml(xmlStr)
+}
+
+//企业付款到零钱
+func (c *Client) MchToCash(params Params) (Params, error) {
+	var url string
+	url = MchToCashUrl
+	xmlStr, err := c.postWithCert(url, params, MchToCashTp)
 	if err != nil {
 		return nil, err
 	}
