@@ -60,9 +60,9 @@ func (c *Client) fillRequestData(params Params, payTp ...string) Params {
 	} else {
 		params["appid"] = c.account.appID
 		params["mch_id"] = c.account.mchID
+		params["sign_type"] = c.signType
 	}
 	params["nonce_str"] = nonceStr()
-	params["sign_type"] = c.signType
 	params["sign"] = c.Sign(params)
 	return params
 }
@@ -101,6 +101,7 @@ func (c *Client) postWithCert(url string, params Params, payTp ...string) (strin
 	}
 	h := &http.Client{Transport: transport}
 	p := c.fillRequestData(params, payTp...)
+	fmt.Println("request", strings.NewReader(MapToXml(p)))
 	response, err := h.Post(url, bodyType, strings.NewReader(MapToXml(p)))
 	if err != nil {
 		return "", err
@@ -177,7 +178,8 @@ func (c *Client) Sign(params Params) string {
 }
 
 // 处理 HTTPS API返回数据，转换成Map对象。return_code为SUCCESS时，验证签名。
-func (c *Client) processResponseXml(xmlStr string) (Params, error) {
+// flags传入标志，第一位标志是否需要验证签名
+func (c *Client) processResponseXml(xmlStr string, flags ...bool) (Params, error) {
 	var returnCode string
 	params := XmlToMap(xmlStr)
 	if params.ContainsKey("return_code") {
@@ -188,6 +190,9 @@ func (c *Client) processResponseXml(xmlStr string) (Params, error) {
 	if returnCode == Fail {
 		return params, nil
 	} else if returnCode == Success {
+		if len(flags) == 1 && flags[0] == false {
+			return params, nil
+		}
 		if c.ValidSign(params) {
 			return params, nil
 		} else {
@@ -400,15 +405,16 @@ func (c *Client) MchToCash(params Params) (Params, error) {
 	var url string
 	url = MchToCashUrl
 	xmlStr, err := c.postWithCert(url, params, MchToCashTp)
+	fmt.Println("res", xmlStr, err)
 	if err != nil {
 		return nil, err
 	}
-	return c.processResponseXml(xmlStr)
+	return c.processResponseXml(xmlStr, false)
 }
 
 func (c *Client) AuthCodeToOpenidMch(params Params) (openID string, err error) {
 	url := fmt.Sprintf("%s?appid=%s&secret=%s&code=%s&grant_type=authorization_code",
-		AuthCodeToOpenidUrlMch, params.GetString("appid"), params.GetString("appsecret"), params.GetString("auth_code"))
+		AuthCodeToOpenidUrlMch, c.account.appID, params.GetString("appsecret"), params.GetString("auth_code"))
 
 	res, err := c.getFromWx(url)
 	fmt.Println("request url", url, "res", res)
@@ -418,6 +424,7 @@ func (c *Client) AuthCodeToOpenidMch(params Params) (openID string, err error) {
 	openIdInterFace, ok := res["openid"]
 	if !ok {
 		err = errors.New("无效的返回")
+		return
 	}
 	openID = openIdInterFace.(string)
 	return
