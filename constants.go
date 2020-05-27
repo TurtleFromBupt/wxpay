@@ -20,6 +20,7 @@ const (
 	ShortUrl                   = "https://api.mch.weixin.qq.com/tools/shorturl"
 	AuthCodeToOpenidUrl        = "https://api.mch.weixin.qq.com/tools/authcodetoopenid"
 	MchToCashUrl               = "https://api.mch.weixin.qq.com/mmpaymkttransfers/promotion/transfers"
+	AuthCodeToOpenidUrlMch     = "https://api.weixin.qq.com/sns/oauth2/access_token"
 	SandboxMicroPayUrl         = "https://api.mch.weixin.qq.com/sandboxnew/pay/micropay"
 	SandboxUnifiedOrderUrl     = "https://api.mch.weixin.qq.com/sandboxnew/pay/unifiedorder"
 	SandboxOrderQueryUrl       = "https://api.mch.weixin.qq.com/sandboxnew/pay/orderquery"

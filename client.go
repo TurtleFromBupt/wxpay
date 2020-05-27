@@ -7,7 +7,9 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"sort"
@@ -402,4 +404,37 @@ func (c *Client) MchToCash(params Params) (Params, error) {
 		return nil, err
 	}
 	return c.processResponseXml(xmlStr)
+}
+
+func (c *Client) AuthCodeToOpenidMch(params Params) (openID string, err error) {
+	url := fmt.Sprintf("%s?appid=%s&secret=%s&code=%s&grant_type=authorization_code",
+		AuthCodeToOpenidUrlMch, params.GetString("appid"), params.GetString("appsecret"), params.GetString("auth_code"))
+
+	res, err := c.getFromWx(url)
+	fmt.Println("request url", url, "res", res)
+	if err != nil {
+		return
+	}
+	openIdInterFace, ok := res["openid"]
+	if !ok {
+		err = errors.New("无效的返回")
+	}
+	openID = openIdInterFace.(string)
+	return
+}
+
+func (c *Client) getFromWx(url string) (result map[string]interface{}, err error) {
+	h := &http.Client{}
+	result = make(map[string]interface{})
+	response, err := h.Get(url)
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
+	res, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(res, &result)
+	return
 }
