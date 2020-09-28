@@ -2,7 +2,6 @@ package wxpay
 
 import (
 	"io/ioutil"
-	"log"
 )
 
 type Account struct {
