@@ -101,7 +101,6 @@ func (c *Client) postWithCert(url string, params Params, payTp ...string) (strin
 	}
 	h := &http.Client{Transport: transport}
 	p := c.fillRequestData(params, payTp...)
-	fmt.Println("request", strings.NewReader(MapToXml(p)))
 	response, err := h.Post(url, bodyType, strings.NewReader(MapToXml(p)))
 	if err != nil {
 		return "", err
@@ -405,9 +404,9 @@ func (c *Client) MchToCash(params Params) (Params, error) {
 	var url string
 	url = MchToCashUrl
 	xmlStr, err := c.postWithCert(url, params, MchToCashTp)
-	fmt.Println("res", xmlStr, err)
 	if err != nil {
-		return nil, err
+        fmt.Println("res", xmlStr, err)
+        return nil, err
 	}
 	return c.processResponseXml(xmlStr, false)
 }
@@ -417,9 +416,9 @@ func (c *Client) AuthCodeToOpenidMch(params Params) (openID string, err error) {
 		AuthCodeToOpenidUrlMch, c.account.appID, params.GetString("appsecret"), params.GetString("auth_code"))
 
 	res, err := c.getFromWx(url)
-	fmt.Println("request url", url, "res", res)
 	if err != nil {
-		return
+        fmt.Println("request url", url, "res", res)
+        return
 	}
 	openIdInterFace, ok := res["openid"]
 	if !ok {
